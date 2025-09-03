@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from api.routers.audio_asset import router as audio_asset_router
+from api.database import engine
+from api.models.audio_asset import Base
 
 app = FastAPI(title="Music Mashup Agent API", version="1.0.0")
 
-# Enable CORS for local development
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -13,7 +15,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+# Serve the frontend UI
+app.mount("/frontend", StaticFiles(directory="frontend", html=True), name="frontend")
+
+# API routes
 app.include_router(audio_asset_router)
 
 @app.get("/")
@@ -24,15 +29,10 @@ def root():
 def health():
     return {"status": "ok"}
 
-# Create tables on startup (with error handling)
 @app.on_event("startup")
 async def startup_event():
     try:
-        from api.database import engine
-        from api.models.audio_asset import Base
         Base.metadata.create_all(bind=engine)
         print("✅ Database tables created successfully!")
     except Exception as e:
         print(f"⚠️ Database connection failed: {e}")
-        print("API will start but database features won't work until connection is fixed")
-
