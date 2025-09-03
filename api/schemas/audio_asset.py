@@ -1,16 +1,30 @@
-from sqlalchemy import Column, String, Float, Integer
-from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.ext.declarative import declarative_base
+from pydantic import BaseModel, ConfigDict
+from typing import Optional
+from datetime import datetime
 import uuid
 
-Base = declarative_base()
+class AudioAssetBase(BaseModel):
+    filename: str
+    title: Optional[str] = None
+    artist: Optional[str] = None
+    bpm: Optional[float] = None
+    duration: Optional[float] = None
+    key_signature: Optional[str] = None
+    file_size: Optional[int] = None
+    format: Optional[str] = None
 
-class AudioAsset(Base):
-    __tablename__ = "audio_assets"
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    path = Column(String, nullable=False)
-    filename = Column(String, nullable=False)
-    title = Column(String)
-    bpm = Column(Float)
-    duration = Column(Float)
-    # Add other fields as needed
+class AudioAssetCreate(AudioAssetBase):
+    pass
+
+class AudioAssetUpdate(BaseModel):
+    title: Optional[str] = None
+    artist: Optional[str] = None
+    bpm: Optional[float] = None
+    key_signature: Optional[str] = None
+
+class AudioAssetResponse(AudioAssetBase):
+    id: uuid.UUID
+    path: str
+    created_at: datetime
+    
+    model_config = ConfigDict(from_attributes=True)  # Updated for Pydantic V2
